@@ -1,0 +1,6 @@
+{
+  "name": "Teju AI FloorPlan 3D",
+  "description": "Professional 2D to 3D floor plan converter for civil engineers and architects. Powered by AI to transform architectural blueprints into interactive 3D models with dollhouse, walkthrough, and CAD exports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
