@@ -300,3 +300,227 @@ export function createProceduralStaircase(w = 1.2, l = 3.2, h = 2.8, steps = 14)
 
   return stair;
 }
+
+/**
+ * Creates a procedural 3D Lift / Elevator Shaft
+ */
+export function createProceduralLift(w = 1.6, d = 1.6, h = 2.8): THREE.Group {
+  const lift = new THREE.Group();
+  lift.name = 'ElevatorShaft';
+
+  // Stainless steel shaft enclosure walls
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.35, metalness: 0.6 });
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.25, metalness: 0.85 });
+
+  // Rear wall
+  const rear = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), wallMat);
+  rear.position.set(0, h / 2, -d / 2 + 0.04);
+  rear.castShadow = true;
+  lift.add(rear);
+
+  // Left wall
+  const left = new THREE.Mesh(new THREE.BoxGeometry(0.08, h, d), wallMat);
+  left.position.set(-w / 2 + 0.04, h / 2, 0);
+  left.castShadow = true;
+  lift.add(left);
+
+  // Right wall
+  const right = new THREE.Mesh(new THREE.BoxGeometry(0.08, h, d), wallMat);
+  right.position.set(w / 2 - 0.04, h / 2, 0);
+  right.castShadow = true;
+  lift.add(right);
+
+  // Front Sliding Doors (with center line)
+  const doorW = (w - 0.2) / 2;
+  const doorL = new THREE.Mesh(new THREE.BoxGeometry(doorW - 0.02, 2.1, 0.04), doorMat);
+  doorL.position.set(-doorW / 2 - 0.01, 1.05, d / 2 - 0.02);
+  doorL.castShadow = true;
+  lift.add(doorL);
+
+  const doorR = new THREE.Mesh(new THREE.BoxGeometry(doorW - 0.02, 2.1, 0.04), doorMat);
+  doorR.position.set(doorW / 2 + 0.01, 1.05, d / 2 - 0.02);
+  doorR.castShadow = true;
+  lift.add(doorR);
+
+  // Floor Indicator Display & Call Button
+  const panelGeo = new THREE.BoxGeometry(0.16, 0.24, 0.02);
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
+  const panel = new THREE.Mesh(panelGeo, panelMat);
+  panel.position.set(w / 2 - 0.08, 1.3, d / 2 + 0.01);
+  lift.add(panel);
+
+  const button = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02, 0.02, 0.01, 12),
+    new THREE.MeshBasicMaterial({ color: 0x10b981 })
+  );
+  button.rotation.x = Math.PI / 2;
+  button.position.set(w / 2 - 0.08, 1.3, d / 2 + 0.025);
+  lift.add(button);
+
+  return lift;
+}
+
+/**
+ * Creates a procedural 3D Pooja Room Altar / Mandir
+ */
+export function createProceduralPoojaAltar(w = 1.2, d = 0.6, h = 1.4): THREE.Group {
+  const pooja = new THREE.Group();
+  pooja.name = 'PoojaMandir';
+
+  const teak = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.45, metalness: 0.05 });
+  const brass = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.25, metalness: 0.85 });
+
+  // Base platform
+  const base = new THREE.Mesh(new THREE.BoxGeometry(w, 0.3, d), teak);
+  base.position.set(0, 0.15, 0);
+  base.castShadow = true;
+  pooja.add(base);
+
+  // Altar niche back
+  const back = new THREE.Mesh(new THREE.BoxGeometry(w, h - 0.3, 0.06), teak);
+  back.position.set(0, (h - 0.3) / 2 + 0.3, -d / 2 + 0.03);
+  back.castShadow = true;
+  pooja.add(back);
+
+  // Stepped pediment / Shikhara canopy
+  const top = new THREE.Mesh(new THREE.ConeGeometry(w * 0.45, 0.4, 4), teak);
+  top.position.set(0, h + 0.2, 0);
+  top.rotation.y = Math.PI / 4;
+  top.castShadow = true;
+  pooja.add(top);
+
+  // Brass Kalash finial
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), brass);
+  finial.position.set(0, h + 0.45, 0);
+  pooja.add(finial);
+
+  // 2 Brass Diya oil lamps
+  [-w * 0.3, w * 0.3].forEach((dx) => {
+    const diya = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.08, 12), brass);
+    diya.position.set(dx, 0.34, 0);
+    pooja.add(diya);
+  });
+
+  return pooja;
+}
+
+/**
+ * Creates a procedural 3D Utility / Technic Room Appliance Setup
+ */
+export function createProceduralUtilityAppliances(w = 1.6, d = 0.7, h = 0.9): THREE.Group {
+  const util = new THREE.Group();
+  util.name = 'UtilityAppliances';
+
+  // 1. Washing Machine
+  const washerGeo = new THREE.BoxGeometry(0.65, 0.88, 0.65);
+  const washerMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.3, metalness: 0.1 });
+  const washer = new THREE.Mesh(washerGeo, washerMat);
+  washer.position.set(-0.4, 0.44, 0);
+  washer.castShadow = true;
+  util.add(washer);
+
+  // Glass Porthole Door
+  const doorGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.03, 24);
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.2, metalness: 0.8 });
+  const door = new THREE.Mesh(doorGeo, doorMat);
+  door.rotation.x = Math.PI / 2;
+  door.position.set(-0.4, 0.45, 0.33);
+  util.add(door);
+
+  // 2. Utility Sink & Laundry Cabinet
+  const sinkCabinet = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.86, 0.65), materials.woodDark);
+  sinkCabinet.position.set(0.4, 0.43, 0);
+  sinkCabinet.castShadow = true;
+  util.add(sinkCabinet);
+
+  const sinkTop = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.04, 0.67), materials.metalChrome);
+  sinkTop.position.set(0.4, 0.88, 0);
+  util.add(sinkTop);
+
+  return util;
+}
+
+/**
+ * Creates a procedural 3D Wardrobe Closet
+ */
+export function createProceduralWardrobe(w = 1.6, d = 0.6, h = 2.1): THREE.Group {
+  const wardrobe = new THREE.Group();
+  wardrobe.name = 'Wardrobe';
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), materials.woodDark);
+  body.position.set(0, h / 2, 0);
+  body.castShadow = true;
+  wardrobe.add(body);
+
+  // Center seam
+  const seam = new THREE.Mesh(new THREE.BoxGeometry(0.01, h - 0.1, 0.02), materials.metalChrome);
+  seam.position.set(0, h / 2, d / 2 + 0.01);
+  wardrobe.add(seam);
+
+  // Handles
+  [-0.05, 0.05].forEach((hx) => {
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.2, 0.03), materials.metalChrome);
+    handle.position.set(hx, 1.1, d / 2 + 0.02);
+    wardrobe.add(handle);
+  });
+
+  return wardrobe;
+}
+
+/**
+ * Creates a procedural 3D Study Desk and Chair
+ */
+export function createProceduralDesk(w = 1.2, d = 0.6, h = 0.76): THREE.Group {
+  const desk = new THREE.Group();
+  desk.name = 'Desk';
+
+  const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), materials.woodLight);
+  top.position.y = h;
+  top.castShadow = true;
+  desk.add(top);
+
+  // Metal frame legs
+  const legGeo = new THREE.BoxGeometry(0.04, h, 0.04);
+  [[-w / 2 + 0.04, -d / 2 + 0.04], [w / 2 - 0.04, -d / 2 + 0.04], [-w / 2 + 0.04, d / 2 - 0.04], [w / 2 - 0.04, d / 2 - 0.04]].forEach(([lx, lz]) => {
+    const leg = new THREE.Mesh(legGeo, materials.metalChrome);
+    leg.position.set(lx, h / 2, lz);
+    leg.castShadow = true;
+    desk.add(leg);
+  });
+
+  // Laptop / Monitor
+  const screen = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.02), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 }));
+  screen.position.set(0, h + 0.15, -0.1);
+  desk.add(screen);
+
+  return desk;
+}
+
+/**
+ * Creates a procedural 3D Armchair
+ */
+export function createProceduralArmchair(w = 0.85, d = 0.85, h = 0.75): THREE.Group {
+  const chair = new THREE.Group();
+  chair.name = 'Armchair';
+
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(w, 0.2, d), materials.fabricGrey);
+  seat.position.y = 0.25;
+  seat.castShadow = true;
+  chair.add(seat);
+
+  const back = new THREE.Mesh(new THREE.BoxGeometry(w, h - 0.2, 0.18), materials.fabricGrey);
+  back.position.set(0, (h - 0.2) / 2 + 0.25, -d / 2 + 0.09);
+  back.castShadow = true;
+  chair.add(back);
+
+  // Armrests
+  [-w / 2 + 0.08, w / 2 - 0.08].forEach((ax) => {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, h * 0.65, d), materials.fabricGrey);
+    arm.position.set(ax, (h * 0.65) / 2, 0);
+    arm.castShadow = true;
+    chair.add(arm);
+  });
+
+  return chair;
+}
+

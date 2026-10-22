@@ -46,34 +46,28 @@ Return valid JSON with:
 - safetyWarning: "Provisional structural geometry. Civil verification required on-site."
 """
 
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[
-                    types.Part.from_bytes(data=raw_base64.encode(), mime_type=mime_type),
-                    prompt
-                ]
-            )
+            for model_name in ["gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash"]:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=[
+                            types.Part.from_bytes(data=raw_base64.encode(), mime_type=mime_type),
+                            prompt
+                        ]
+                    )
 
-            text = response.text or ""
-            json_match = re.search(r"\{[\s\S]*\}", text)
-            if json_match:
-                parsed = json.loads(json_match.group(0))
-                return {
-                    "success": True,
-                    "source": "gemini-ai",
-                    "data": parsed
-                }
+                    text = response.text or ""
+                    json_match = re.search(r"\{[\s\S]*\}", text)
+                    if json_match:
+                        parsed = json.loads(json_match.group(0))
+                        return {
+                            "success": True,
+                            "source": "gemini-ai",
+                            "data": parsed
+                        }
+                except Exception as model_err:
+                    print(f"Model {model_name} error: {model_err}")
         except Exception as e:
-            print(f"Gemini AI processing fallback: {e}")
+            print(f"Gemini AI processing error: {e}")
 
-    # Fallback to parametric architectural geometry engine
-    data = generate_parametric_geometry(
-        width=known_dimension_meters,
-        length=round(known_dimension_meters * 0.85, 2),
-        project_name=project_name
-    )
-    return {
-        "success": True,
-        "source": "architectural-engine",
-        "data": data
-    }
+    raise ValueError("AI Vision analysis could not parse the drawing. Please verify the drawing resolution or calibrate scale.")

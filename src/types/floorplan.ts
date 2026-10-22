@@ -9,6 +9,7 @@ export type RoomCategory =
   | 'master_bedroom'
   | 'kitchen'
   | 'bathroom'
+  | 'attached_bathroom'
   | 'dining_room'
   | 'balcony'
   | 'hallway'
@@ -16,7 +17,18 @@ export type RoomCategory =
   | 'garage'
   | 'utility'
   | 'pooja_room'
-  | 'foyer';
+  | 'foyer'
+  | 'lift'
+  | 'lobby'
+  | 'staircase';
+
+export interface LiftData {
+  id: string;
+  position: Point2D;
+  width: number;
+  depth: number;
+  label?: string;
+}
 
 export type FloorFinish =
   | 'light_oak_wood'
@@ -128,6 +140,7 @@ export interface FloorPlanModel {
   updatedAt: string;
   originalImage?: string; // base64 data URL or path
   imageDimensions?: { width: number; height: number };
+  drawingBounds?: { minY: number; minX: number; maxY: number; maxX: number };
   scale: ScaleCalibration;
   overallDimensions: {
     widthMeters: number;
@@ -139,6 +152,7 @@ export interface FloorPlanModel {
   doors: DoorData[];
   windows: WindowData[];
   stairs: StairData[];
+  lifts?: LiftData[];
   furniture: FurnitureData[];
   customSettings: {
     defaultWallHeight: number;

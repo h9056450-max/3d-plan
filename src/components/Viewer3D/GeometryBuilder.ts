@@ -14,6 +14,12 @@ import {
   createProceduralKitchenCounter,
   createProceduralBathroomFixtures,
   createProceduralStaircase,
+  createProceduralLift,
+  createProceduralPoojaAltar,
+  createProceduralUtilityAppliances,
+  createProceduralWardrobe,
+  createProceduralDesk,
+  createProceduralArmchair,
 } from './ProceduralFurniture';
 
 /**
@@ -357,12 +363,27 @@ export function buildFloorPlan3D(
     // Room-specific furnishings
     plan.rooms.forEach((r) => {
       const rc = to3D(r.center);
+      const cat = r.category?.toLowerCase() || '';
+      const name = r.name?.toLowerCase() || '';
 
-      if (r.category === 'bedroom' || r.category === 'master_bedroom') {
-        const bed = createProceduralBed(r.category === 'master_bedroom' ? 2.0 : 1.6, 2.0);
+      if (cat === 'bedroom' || cat === 'master_bedroom') {
+        const bed = createProceduralBed(cat === 'master_bedroom' ? 2.0 : 1.6, 2.0);
         bed.position.set(rc.x, 0, rc.z);
         rootGroup.add(bed);
-      } else if (r.category === 'living_room') {
+
+        if (r.furnishings?.some((f) => f.includes('wardrobe') || f.includes('closet'))) {
+          const w = createProceduralWardrobe(Math.min(1.8, r.dimensions.width * 0.4));
+          w.position.set(rc.x - r.dimensions.width * 0.35, 0, rc.z);
+          w.rotation.y = Math.PI / 2;
+          rootGroup.add(w);
+        }
+
+        if (r.furnishings?.some((f) => f.includes('desk') || f.includes('table'))) {
+          const d = createProceduralDesk();
+          d.position.set(rc.x + r.dimensions.width * 0.3, 0, rc.z + r.dimensions.length * 0.3);
+          rootGroup.add(d);
+        }
+      } else if (cat === 'living_room') {
         const sofa = createProceduralSofa(Math.min(2.6, r.dimensions.width * 0.6));
         sofa.position.set(rc.x - 0.4, 0, rc.z - 0.4);
         rootGroup.add(sofa);
@@ -371,24 +392,51 @@ export function buildFloorPlan3D(
         coffee.position.set(rc.x - 0.4, 0, rc.z + 0.5);
         rootGroup.add(coffee);
 
-        if (r.dimensions.areaSqm > 25) {
+        if (r.furnishings?.some((f) => f.includes('armchair') || f.includes('chair'))) {
+          const arm = createProceduralArmchair();
+          arm.position.set(rc.x + 0.8, 0, rc.z + 0.5);
+          arm.rotation.y = -Math.PI / 3;
+          rootGroup.add(arm);
+        }
+
+        if (r.dimensions.areaSqm > 20 || r.furnishings?.some((f) => f.includes('dining'))) {
           const dining = createProceduralDiningSet();
-          dining.position.set(rc.x + 1.6, 0, rc.z);
+          dining.position.set(rc.x + 1.4, 0, rc.z - 0.2);
           rootGroup.add(dining);
         }
-      } else if (r.category === 'dining_room') {
+      } else if (cat === 'dining_room') {
         const dining = createProceduralDiningSet();
         dining.position.set(rc.x, 0, rc.z);
         rootGroup.add(dining);
-      } else if (r.category === 'kitchen') {
+      } else if (cat === 'kitchen') {
         const counter = createProceduralKitchenCounter(Math.min(2.8, r.dimensions.width * 0.8));
         counter.position.set(rc.x, 0, rc.z);
         rootGroup.add(counter);
-      } else if (r.category === 'bathroom') {
+      } else if (cat === 'bathroom' || cat === 'attached_bathroom') {
         const fixtures = createProceduralBathroomFixtures();
         fixtures.position.set(rc.x, 0, rc.z);
         rootGroup.add(fixtures);
+      } else if (cat === 'pooja_room' || name.includes('pooja') || name.includes('mandir')) {
+        const altar = createProceduralPoojaAltar(Math.min(1.4, r.dimensions.width * 0.7));
+        altar.position.set(rc.x, 0, rc.z);
+        rootGroup.add(altar);
+      } else if (cat === 'utility' || name.includes('technic') || name.includes('utility') || name.includes('laundry')) {
+        const util = createProceduralUtilityAppliances(Math.min(1.8, r.dimensions.width * 0.8));
+        util.position.set(rc.x, 0, rc.z);
+        rootGroup.add(util);
+      } else if (cat === 'lift' || name.includes('lift') || name.includes('elevator')) {
+        const lift = createProceduralLift(r.dimensions.width, r.dimensions.length, effectiveWallHeight);
+        lift.position.set(rc.x, 0, rc.z);
+        rootGroup.add(lift);
       }
+    });
+
+    // Lifts explicitly listed in plan
+    (plan.lifts || []).forEach((l) => {
+      const lp = to3D(l.position);
+      const lift = createProceduralLift(l.width || 1.6, l.depth || 1.6, effectiveWallHeight);
+      lift.position.set(lp.x, 0, lp.z);
+      rootGroup.add(lift);
     });
 
     // Explicit furniture items if defined

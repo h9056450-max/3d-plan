@@ -20,13 +20,15 @@ import {
 import { FloorPlanModel } from '../types/floorplan';
 import { SAMPLE_BLUEPRINTS, generateBlueprintDataUrl } from '../services/sampleBlueprints';
 import { analyzeFloorPlanImage } from '../services/aiService';
+import { renderPdfPageToImage } from '../services/pdfService';
 
 interface UploadScreenProps {
   onPlanAnalyzed: (plan: FloorPlanModel) => void;
   onCancel: () => void;
+  onManualTrace?: (drawingDataUrl: string, projectName: string) => void;
 }
 
-export const UploadScreen: React.FC<UploadScreenProps> = ({ onPlanAnalyzed, onCancel }) => {
+export const UploadScreen: React.FC<UploadScreenProps> = ({ onPlanAnalyzed, onCancel, onManualTrace }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('My Residence Floor Plan');
@@ -34,15 +36,19 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onPlanAnalyzed, onCa
   const [knownDimensionMeters, setKnownDimensionMeters] = useState<number>(12.0);
   const [dimensionUnit, setDimensionUnit] = useState<'meters' | 'feet'>('meters');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRenderingPdf, setIsRenderingPdf] = useState(false);
+  const [pdfPageCount, setPdfPageCount] = useState(1);
   const [processingStage, setProcessingStage] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle file drop or selection
-  const handleFileProcess = (file: File) => {
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-    if (!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|pdf)$/i)) {
+  const handleFileProcess = async (file: File) => {
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const isImg = file.type.startsWith('image/') || file.name.match(/\.(jpg|jpeg|png)$/i);
+
+    if (!isPdf && !isImg) {
       setErrorMsg('Please upload a valid JPG, JPEG, PNG, or PDF floor plan drawing.');
       return;
     }
@@ -50,17 +56,28 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onPlanAnalyzed, onCa
     setErrorMsg(null);
     setSelectedFile(file);
 
-    // Read preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setPreviewUrl(result);
-    };
-    reader.readAsDataURL(file);
-
-    // Default project name from file name
     const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
     setProjectName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+
+    if (isPdf) {
+      setIsRenderingPdf(true);
+      try {
+        const rendered = await renderPdfPageToImage(file, 1, 2.0);
+        setPreviewUrl(rendered.dataUrl);
+        setPdfPageCount(rendered.pageCount);
+      } catch (err: any) {
+        console.error('PDF render error:', err);
+        setErrorMsg('Could not render PDF directly. Please ensure it contains a raster or CAD drawing page, or upload as PNG/JPG.');
+      } finally {
+        setIsRenderingPdf(false);
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -170,7 +187,13 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onPlanAnalyzed, onCa
               }}
             />
 
-            {previewUrl ? (
+            {isRenderingPdf ? (
+              <div className="text-center space-y-2 p-6">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" />
+                <p className="text-xs font-semibold text-slate-800">Rendering PDF drawing page...</p>
+                <p className="text-[11px] text-slate-500">Converting vector architectural blueprint to high-res canvas</p>
+              </div>
+            ) : previewUrl ? (
               <div className="relative w-full h-full flex flex-col items-center">
                 <img
                   src={previewUrl}
@@ -178,7 +201,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({ onPlanAnalyzed, onCa
                   className="max-h-[300px] w-auto object-contain rounded-lg shadow-sm border border-slate-200 bg-white"
                 />
                 <span className="mt-3 text-xs font-medium text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-xs">
-                  Click or drag another file to replace
+                  {selectedFile ? `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(0)} KB)` : 'Drawing Loaded'} • Click to replace
                 </span>
               </div>
             ) : (
